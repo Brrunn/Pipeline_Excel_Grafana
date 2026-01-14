@@ -1,0 +1,50 @@
+
+services:
+  # 1. La Base de données
+  mariadb:
+    image: mariadb:latest
+    container_name: kpi_mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: adminpassword  # À changer pour la prod !
+      MYSQL_DATABASE: kpi_db
+      MYSQL_USER: kpi_user
+      MYSQL_PASSWORD: kpi_password
+    ports:               
+      - "3306:3306"        
+    volumes:
+      - ./mariadb_data:/var/lib/mysql     # Persistance des données
+    networks:
+      - kpi-network
+
+  # 2. L'ETL (Node-RED)
+  node-red:
+    image: nodered/node-red
+    container_name: kpi_nodered
+    restart: always
+    user: root # Nécessaire parfois pour éviter les soucis de permission d'écriture
+    ports:
+      - "1880:1880"
+    volumes:
+      - ./nodered_data:/data              # Sauvegarde des flows
+      - ./input_excel:/data/input_excel   # LE LIEN MAGIQUE : Ton dossier local est monté dans le conteneur
+    links:
+      - mariadb
+    networks:
+      - kpi-network
+
+  # 3. La Viz (Grafana)
+  grafana:
+    image: grafana/grafana
+    container_name: kpi_grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    links:
+      - mariadb
+    networks:
+      - kpi-network
+
+networks:
+  kpi-network:
+    driver: bridge

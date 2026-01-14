@@ -1,0 +1,178 @@
+[
+    {
+        "id": "6fe74c47370a1c47",
+        "type": "tab",
+        "label": "Flux 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "3682eb2cbe70244f",
+        "type": "inject",
+        "z": "6fe74c47370a1c47",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 90,
+        "y": 200,
+        "wires": [
+            [
+                "c8e6d84ea9459bf5"
+            ]
+        ]
+    },
+    {
+        "id": "c8e6d84ea9459bf5",
+        "type": "file in",
+        "z": "6fe74c47370a1c47",
+        "name": "",
+        "filename": "/data/input_excel/planif.csv",
+        "filenameType": "str",
+        "format": "",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 300,
+        "y": 200,
+        "wires": [
+            [
+                "803f281d5703e771"
+            ]
+        ]
+    },
+    {
+        "id": "bbd6998e0b8b7299",
+        "type": "sheet",
+        "z": "6fe74c47370a1c47",
+        "name": "",
+        "sheetName": "Sheet1",
+        "x": 670,
+        "y": 200,
+        "wires": [
+            [
+                "0bf9ddd0a7254cce"
+            ]
+        ]
+    },
+    {
+        "id": "57edc348f567f510",
+        "type": "function",
+        "z": "6fe74c47370a1c47",
+        "name": "function 1",
+        "func": "var rows = msg.payload;\n\n// Sécurité : Si le fichier est vide\nif (!rows || rows.length === 0) return null;\n\nvar values = [];\n\n// On boucle sur chaque ligne de l'Excel\nfor (var i = 0; i < rows.length; i++) {\n    var r = rows[i];\n\n    // On mappe les colonnes Excel (entre crochets) vers une liste de valeurs\n    // On utilise || '' pour gérer les cases vides\n    var ligne = [\n        \"'\" + (r['Takt'] || '') + \"'\",\n        \"'\" + (r['Heure Début'] || '') + \"'\",\n        \"'\" + (r['Heure Fin'] || '') + \"'\",\n        \"'\" + (r['Interrompu'] || '') + \"'\",\n        \"'\" + (r['Poste 8'] || '') + \"'\",\n        \"'\" + (r['Poste 7'] || '') + \"'\",\n        \"'\" + (r['Poste 6'] || '') + \"'\",\n        \"'\" + (r['Poste 5'] || '') + \"'\",\n        \"'\" + (r['Poste 4'] || '') + \"'\",\n        \"'\" + (r['Poste 3'] || '') + \"'\",\n        \"'\" + (r['Poste 2'] || '') + \"'\",\n        \"'\" + (r['Poste 1'] || '') + \"'\"\n    ];\n\n    values.push(\"(\" + ligne.join(\",\") + \")\");\n}\n\n// Message 1 : On vide la table (TRUNCATE)\nvar msg1 = { topic: \"TRUNCATE TABLE planif;\" };\n\n// Message 2 : On insère tout (INSERT)\nvar sqlInsert = \"INSERT INTO planif (takt, heure_debut, heure_fin, interrompu, poste_8, poste_7, poste_6, poste_5, poste_4, poste_3, poste_2, poste_1) VALUES \" + values.join(\",\");\nvar msg2 = { topic: sqlInsert };\n\nreturn [msg1, msg2];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1000,
+        "y": 200,
+        "wires": [
+            [
+                "860dca690b0e0a45",
+                "65ebab1a1255ffbf"
+            ],
+            [
+                "860dca690b0e0a45",
+                "65ebab1a1255ffbf"
+            ]
+        ]
+    },
+    {
+        "id": "860dca690b0e0a45",
+        "type": "mysql",
+        "z": "6fe74c47370a1c47",
+        "mydb": "e27778b4a5d2ca5d",
+        "name": "",
+        "x": 1200,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "803f281d5703e771",
+        "type": "book",
+        "z": "6fe74c47370a1c47",
+        "name": "",
+        "raw": false,
+        "x": 530,
+        "y": 200,
+        "wires": [
+            [
+                "bbd6998e0b8b7299"
+            ]
+        ]
+    },
+    {
+        "id": "0bf9ddd0a7254cce",
+        "type": "sheet-to-json",
+        "z": "6fe74c47370a1c47",
+        "name": "",
+        "raw": "false",
+        "range": "",
+        "header": "default",
+        "blankrows": false,
+        "x": 830,
+        "y": 200,
+        "wires": [
+            [
+                "57edc348f567f510",
+                "65ebab1a1255ffbf"
+            ]
+        ]
+    },
+    {
+        "id": "65ebab1a1255ffbf",
+        "type": "debug",
+        "z": "6fe74c47370a1c47",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1120,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "e27778b4a5d2ca5d",
+        "type": "MySQLdatabase",
+        "name": "MariaDB",
+        "host": "mariadb",
+        "port": "3306",
+        "db": "kpi_db",
+        "tz": "",
+        "charset": "UTF8"
+    },
+    {
+        "id": "50c23d7ac9952f51",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-spreadsheet-in": "0.7.2",
+            "node-red-node-mysql": "3.0.0"
+        }
+    }
+]
