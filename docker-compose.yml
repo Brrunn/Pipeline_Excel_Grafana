@@ -1,39 +1,63 @@
+version: '3.8'
 
 services:
   # 1. La Base de données
   mariadb:
-    image: mariadb:latest
+    image: mariadb:10.6 # Je recommande une version fixe pour la stabilité
     container_name: kpi_mariadb
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: adminpassword  # À changer pour la prod !
+      MYSQL_ROOT_PASSWORD: adminpassword
       MYSQL_DATABASE: kpi_db
       MYSQL_USER: kpi_user
       MYSQL_PASSWORD: kpi_password
     ports:               
       - "3306:3306"        
     volumes:
-      - ./mariadb_data:/var/lib/mysql     # Persistance des données
+      - ./mariadb_data:/var/lib/mysql
+    networks:
+      - kpi-network
+    # Healthcheck : Permet aux autres services de savoir quand la BDD est VRAIMENT prête
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-padminpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Le Script d'Import (Nouveau !)
+  importer:
+    build: ./importer
+    container_name: kpi_importer
+    depends_on:
+      mariadb:
+        condition: service_healthy # Attend que le healthcheck de MariaDB soit OK
+    volumes:
+      - ./input_csv:/data # On lie ton dossier local CSV au dossier /data du conteneur
+    environment:
+      - MYSQL_DATABASE=kpi_db
+      - MYSQL_USER=kpi_user
+      - MYSQL_PASSWORD=kpi_password
+      - DB_HOST=mariadb
     networks:
       - kpi-network
 
-  # 2. L'ETL (Node-RED)
+  # 3. L'ETL (Node-RED) - Gardé pour tes futurs flux
   node-red:
     image: nodered/node-red
     container_name: kpi_nodered
     restart: always
-    user: root # Nécessaire parfois pour éviter les soucis de permission d'écriture
+    user: root
     ports:
       - "1880:1880"
     volumes:
-      - ./nodered_data:/data              # Sauvegarde des flows
-      - ./input_excel:/data/input_excel   # LE LIEN MAGIQUE : Ton dossier local est monté dans le conteneur
+      - ./nodered_data:/data
+      - ./input_csv:/data/input_excel
     links:
       - mariadb
     networks:
       - kpi-network
 
-  # 3. La Viz (Grafana)
+  # 4. La Viz (Grafana)
   grafana:
     image: grafana/grafana
     container_name: kpi_grafana

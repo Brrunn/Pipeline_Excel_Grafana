@@ -1,3 +1,15 @@
+# Ignorer les données de la base de données (lourd + inutile à partager)
 mariadb_data/
 nodered_data/
+grafana_data/
+
+# Ignorer les fichiers système Mac/Windows
 .DS_Store
+Thumbs.db
+
+# Ignorer les CSV (Car trop lourds pour GitHub > 100Mo) IMPORTANT sinon github bloque
+input_csv/*.csv
+
+# Ignorer les fichiers temporaires Python
+__pycache__/
+*.pyc
