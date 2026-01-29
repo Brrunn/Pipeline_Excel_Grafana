@@ -1,78 +1,99 @@
-# Dashboard KPI : Excel vers Grafana
+## 🏗 Architecture
 
-Ce projet est une solution clé en main pour transformer un fichier de planification Excel en tableau de bord interactif sur Grafana. Tout l'environnement (ETL, Base de données, Visualisation) est conteneurisé avec Docker pour une installation facile.
-
-**Stack Technique :**
-* **Node-RED** : Pour lire l'Excel et injecter les données (ETL).
-* **MariaDB** : Pour le stockage des données.
-* **Grafana** : Pour la visualisation (KPIs).
-* **Docker** : Pour l'orchestration.
-
----
-
-## 1. Prérequis
-
-Avant de commencer, vous devez avoir installé :
-* **Docker Desktop** : [Télécharger ici](https://www.docker.com/products/docker-desktop/).
-    * *Installez-le et assurez-vous qu'il est lancé (l'icône de la baleine doit être stable).*
+| Service | Rôle | Accès |
+| :--- | :--- | :--- |
+| **MariaDB** | Base de données SQL (Stockage) | `localhost:3306` |
+| **Importer (Python)** | Script automatique qui lit les CSV et remplit la BDD | *Interne uniquement* |
+| **Grafana** | Outils de création de Dashboards et KPIs | `http://localhost:3000` |
+| **Node-RED** | (Optionnel) Flux d'automatisation | `http://localhost:1880` |
 
 ---
 
-## 2. Installation (Premier démarrage)
+## 🚀 Installation & Démarrage (5 min)
 
-1.  **Récupérez le projet** (Ouvrez un terminal ou PowerShell et collez) :
-    ```bash
-    git clone [https://github.com/Brrunn/Pipeline_Excel_Grafana.git](https://github.com/Brrunn/Pipeline_Excel_Grafana.git)
-    cd Pipeline_Excel_Grafana
-    ```
+### 1. Pré-requis
 
-2.  **Lancez l'application** :
-    ```bash
-    docker-compose up -d
-    ```
-    *Attendez quelques minutes que les conteneurs se téléchargent et démarrent.*
+- Avoir **Docker Desktop** installé et lancé sur votre machine.
+- Avoir **Git** installé.
+
+### 2. Récupérer le projet
+
+Clonez ce dépôt sur votre ordinateur (ouvrir un terminal VsCode) :
+
+```bash
+git clone <https://github.com/Brrunn/Pipeline_Excel_Grafana>
+cd Pipeline_Safran
+```
+
+### 3. Préparer les données
+
+Déposez vos fichiers CSV sources dans le dossier /input_csv situé à la racine.
+
+**⚠️ IMPORTANT** : Les fichiers doivent être nommés exactement comme ci-dessous pour être reconnus par le script d'importation :
+- ShopActivityRecent.csv
+- ShopActivityHistorical.csv
+- Reference_WorkCenter.csv
+- Reference_Employee.csv
+- Reference_DIPlan.csv
+- Reference_Department.csv
+- OrderOperation.csv
+- OrderHeader.csv
+- DIActivity.csv
+
+### 4. Lancer le pipeline
+
+Ouvrez un terminal dans le dossier du projet et lancez :
+
+```bash
+docker-compose up --build -d
+```
+
+**Ce qui va se passer :** 
+- MariaDB démarre.
+- Le script Python attend que la BDD soit prête, puis charge vos CSV un par un (cela peut prendre quelques minutes selon la taille des fichiers).
+- Une fois terminé, les données sont persistantes (même si vous éteignez Docker).
+
+
+## Comment explorer les données (SQL)
+
+Pour vérifier les données, faire des requêtes SQL complexes ou voir le schéma, nous recommandons l'outil gratuit **DBeaver** (ou l'extension "Database Client" sur VS Code).
+
+**Paramètres de connexion (depuis votre ordinateur) :**
+
+| Paramètre | Valeur |
+| :--- | :--- |
+| **Type de BDD** | MariaDB / MySQL |
+| **Server Host** | `localhost` |
+| **Port** | `3306` |
+| **Database** | `kpi_db` |
+| **Username** | `kpi_user` |
+| **Password** | `kpi_password` |
 
 ---
 
-## 3. Configuration Initiale (À faire une seule fois)
+## Comment visualiser les KPIs (Grafana)
 
-Ces étapes sont nécessaires uniquement lors de la toute première installation sur votre machine.
+Ouvrez votre navigateur sur : [http://localhost:3000](http://localhost:3000)
 
-### A. Configurer Node-RED (Le moteur)
-1.  Ouvrez votre navigateur sur [http://localhost:1880](http://localhost:1880).
-2.  Cliquez sur le **Menu (≡)** en haut à droite > **Import**.
-3.  Cliquez sur **Select a file to import** et choisissez le fichier `flow_nodered.json` (qui se trouve dans le dossier du projet que vous avez téléchargé).
-4.  Cliquez sur **Import**.
-5.  Si une fenêtre vous demande d'installer des modules manquants, validez.
-6.  Cliquez sur le bouton rouge **Deploy** en haut à droite.
+**Identifiants par défaut :**
+* **User :** `admin`
+* **Password :** `admin` (changez-le lors de la première connexion ou pas dailleurs, plus facile à retenir)
 
-### B. Connecter Grafana
-1.  Ouvrez [http://localhost:3000](http://localhost:3000).
-2.  Identifiants par défaut : **User** `admin` / **Password** `admin` (passez l'étape de changement de mot de passe en cliquant sur "Skip").
-3.  Allez dans le menu de gauche **Connections** (ou Configuration) > **Data Sources** > **Add data source**.
-4.  Sélectionnez **MySQL**.
-5.  Remplissez les informations suivantes (C'est précis !) :
-    * **Host :** `mariadb:3306`  *( Ne mettez pas localhost !)*
-    * **Database :** `kpi_db`
-    * **User :** `kpi_user`
-    * **Password :** `kpi_password`
-6.  Cliquez sur **Save & Test**. Un message vert doit confirmer la connexion.
+### Connecter la base de données à Grafana
+Lors de la première utilisation, vous devez dire à Grafana où chercher les données :
 
----
+1. Allez dans **Connections** (menu gauche) -> **Data Sources** -> **Add new data source**.
+2. Sélectionnez **MySQL** (MariaDB est compatible MySQL).
+3. Configurez **EXACTEMENT** comme ceci (Attention au Host !) :
 
-## 4. Utilisation au quotidien
+| Champ | Valeur | Note importante |
+| :--- | :--- | :--- |
+| **Host** | `mariadb:3306` | ⚠️ Ne mettez pas "localhost", car on est dans le réseau Docker ! |
+| **Database** | `kpi_db` | |
+| **User** | `kpi_user` | |
+| **Password** | `kpi_password` | |
 
-Pour mettre à jour les données du tableau de bord :
-
-1.  Prenez votre fichier Excel de planification.
-2.  **Renommez-le** impérativement : `planif.xlsx`.
-3.  Déposez ce fichier dans le dossier **`input_excel`** (situé dans le dossier du projet).
-4.  Allez sur Node-RED ([http://localhost:1880](http://localhost:1880)).
-5.  Cliquez sur le petit bouton carré à gauche du nœud bleu **"Horodatage"**.
-    * *Cela déclenche la lecture du fichier, vide l'ancienne base et insère les nouvelles données.*
-6.  Allez sur Grafana ([http://localhost:3000](http://localhost:3000)) pour voir vos KPI à jour.
+4. Cliquez sur **Save & Test**. Vous devriez voir un message vert "Database Connection OK".
+5. Vous pouvez maintenant créer des Dashboards !
 
 ---
-
-
-
