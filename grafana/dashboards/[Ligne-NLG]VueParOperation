@@ -1,0 +1,859 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 0,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "uid": "mysql"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "/.*/",
+          "values": true
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {
+          "dataset": "kpi_db",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  TIME_FORMAT(\n    SEC_TO_TIME(\n      TIME_TO_SEC(STR_TO_DATE(Heure_Fin, '%d/%m %H:%i')) -\n      TIME_TO_SEC(STR_TO_DATE(Heure_Debut, '%d/%m %H:%i'))\n    ),\n    '%Hh%i'\n  ) AS takt_time\nFROM planning_global\nWHERE Semaine = ${semaine}\nLIMIT 1;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Takt de la semaine ",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "dffogrdjtx1q8b"
+      },
+      "description": "Nombre de pièces prévues sur la semaine sélectionnée. Ce total correspond au nombre de takts planifiés sur la semaine choisie. ",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": 0
+              },
+              {
+                "color": "light-purple",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {
+          "dataset": "kpi_db",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  COUNT(DISTINCT Takt) AS Total_Pieces\nFROM planning_global\nWHERE Ligne = 'NLG' \n  AND Semaine IN ($semaine);",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Objectif Hebdomadaire (nbr pièces)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "dffogrdjtx1q8b"
+      },
+      "description": "Une pièce est considérée en retard si elle se trouve dans l'une de ces situations sur la ligne :\n- Le temps est écoulé : L'heure de fin prévue au planning est passée, mais l'opération n'est pas encore déclarée \"Terminée\".\n- Le pointage est tardif : L'opération a bien été réalisée, mais elle a été terminée (ou commencée) après l'heure limite autorisée par le Takt.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "semi-dark-red",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {
+          "dataset": "kpi_db",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT p.OrderNum) AS Pieces_En_Retard\nFROM planning_global p\nLEFT JOIN orderoperation o \n  ON CAST(p.OrderNum AS CHAR) = CAST(o.OrderNum AS CHAR)\n AND CAST(p.OrderStepSequenceNum AS CHAR) = CAST(o.OrderStepSequenceNum AS CHAR)\nWHERE p.Ligne = 'NLG' \n  AND p.Semaine IN ($semaine)\n  AND p.OrderNum != 'Libre'\n  \n  -- LA MAGIE EST ICI : On exclut TOUS les statuts 'Completed' \n  -- car le tableau les considère comme verts par défaut.\n  AND IFNULL(o.Status, '') != 'Completed'\n  \n  AND (\n    -- La pièce est pointée finie (mais n'a pas le statut Completed, ce qui est rare mais possible)\n    (o.LastActivityTime IS NOT NULL AND o.LastActivityTime > STR_TO_DATE(CONCAT(p.Annee, '/', TRIM(p.Heure_Fin)), '%Y/%d/%m %H:%i'))\n    OR \n    -- La pièce a démarré en retard et tourne encore\n    (o.LastActivityTime IS NULL AND o.FirstActivityTime IS NOT NULL AND o.FirstActivityTime > STR_TO_DATE(CONCAT(p.Annee, '/', TRIM(p.Heure_Fin)), '%Y/%d/%m %H:%i'))\n    OR \n    -- La date simulée à 14h00 a dépassé l'heure limite du planning\n    (STR_TO_DATE('2026-01-27 14:00:00', '%Y-%m-%d %H:%i:%s') > STR_TO_DATE(CONCAT(p.Annee, '/', TRIM(p.Heure_Fin)), '%Y/%d/%m %H:%i'))\n  );",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "OF en retard sur ligne",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "dffogrdjtx1q8b"
+      },
+      "description": "Regarde si la dernière opération est terminée pour les pièces qui ont été planifiées sur la semaine sélectionné.  ",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {
+          "dataset": "kpi_db",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT p.OrderNum) AS OF_Termines\nFROM planning_global p\nJOIN orderoperation o \n  ON CAST(p.OrderNum AS CHAR) = CAST(o.OrderNum AS CHAR)\n AND CAST(p.OrderStepSequenceNum AS CHAR) = CAST(o.OrderStepSequenceNum AS CHAR)\nWHERE \n  p.Ligne = 'NLG' \n  AND p.Semaine IN ($semaine)\n  AND p.OrderNum != 'Libre'\n  -- On ne regarde QUE la dernière opération de la ligne pour valider la fin de la pièce\n  AND p.OrderStepSequenceNum = '900' \n  -- Le statut de cette dernière opération doit être terminé\n  AND o.Status = 'Completed';",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "OF terminés",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "dffogrdjtx1q8b"
+      },
+      "description": "Visualisation de l'avancement de chaque Ordre de Fabrication (OF) station par station.\n🔴 Rouge : En retard par rapport au Takt prévu.\n🟢 Vert : Opération terminée.\n🔵 Bleu : À l'heure ou en attente de démarrage.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "pattern": ".*🔴.*",
+                "result": {
+                  "color": "dark-red",
+                  "index": 0
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*🟢.*",
+                "result": {
+                  "color": "dark-green",
+                  "index": 1
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": ".*🔵.*",
+                "result": {
+                  "color": "dark-blue",
+                  "index": 2
+                }
+              },
+              "type": "regex"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "OP .*"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 3,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {
+          "dataset": "kpi_db",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  p.Takt,\n  CONCAT('OP ', p.OrderStepSequenceNum) AS Station,\n  \n  -- La couleur est collée à l'OF dans la case\n  CASE\n    WHEN p.OrderNum = 'Libre' THEN '⚪ Libre'\n    WHEN o.Status = 'Completed' THEN CONCAT('🟢 ', p.OrderNum)\n    \n    -- Le calcul du retard (Simulé au 27 Janvier)\n    WHEN (o.LastActivityTime IS NOT NULL AND o.LastActivityTime > STR_TO_DATE(CONCAT(p.Annee, '/', TRIM(p.Heure_Fin)), '%Y/%d/%m %H:%i'))\n      OR (o.LastActivityTime IS NULL AND o.FirstActivityTime IS NOT NULL AND o.FirstActivityTime > STR_TO_DATE(CONCAT(p.Annee, '/', TRIM(p.Heure_Fin)), '%Y/%d/%m %H:%i'))\n      OR (STR_TO_DATE('2026-01-27 14:00:00', '%Y-%m-%d %H:%i:%s') > STR_TO_DATE(CONCAT(p.Annee, '/', TRIM(p.Heure_Fin)), '%Y/%d/%m %H:%i') AND IFNULL(o.Status, '') != 'Completed')\n      THEN CONCAT('🔴 ', p.OrderNum)\n      \n    -- Reste (Pas commencé ou à l'heure)\n    ELSE CONCAT('🔵 ', p.OrderNum)\n  END AS OF_Visuel\n  \nFROM planning_global p\nLEFT JOIN orderoperation o \n  ON CAST(p.OrderNum AS CHAR) = CAST(o.OrderNum AS CHAR)\n AND CAST(p.OrderStepSequenceNum AS CHAR) = CAST(o.OrderStepSequenceNum AS CHAR)\nWHERE p.Ligne = 'NLG' \n  AND p.Semaine IN ($semaine)\nORDER BY \n  CAST(SUBSTRING_INDEX(p.Takt, ' ', -1) AS UNSIGNED) ASC, \n  CAST(p.OrderStepSequenceNum AS UNSIGNED) ASC;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Vue ligne taktée",
+      "transformations": [
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "Station",
+            "rowField": "Takt",
+            "valueField": "OF_Visuel"
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "dffogrdjtx1q8b"
+      },
+      "description": "Ce tableau agit comme une loupe sur la station sélectionnée. Il n'affiche que les OF actuellement en cours de travail (le pointage de début a été fait, mais l'opération n'est pas encore terminée).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "-": {
+                  "color": "blue",
+                  "index": 0
+                }
+              },
+              "type": "value"
+            },
+            {
+              "options": {
+                "pattern": "^\\+.*",
+                "result": {
+                  "color": "red",
+                  "index": 1
+                }
+              },
+              "type": "regex"
+            },
+            {
+              "options": {
+                "pattern": "^\\-.*",
+                "result": {
+                  "color": "green",
+                  "index": 2
+                }
+              },
+              "type": "regex"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Écart.*"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 15
+      },
+      "id": 6,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {
+          "dataset": "kpi_db",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  OF_Num AS `Numéro OF`,\n  Takt,\n  DATE_FORMAT(Debut_Theo, '%d/%m %H:%i') AS `Début Théorique`,\n  DATE_FORMAT(Fin_Theo, '%d/%m %H:%i') AS `Fin Théorique`,\n  IFNULL(DATE_FORMAT(Debut_Reel, '%d/%m %H:%i'), '-') AS `Début Réel`,\n  IFNULL(DATE_FORMAT(Fin_Reel, '%d/%m %H:%i'), '-') AS `Fin Réelle`,\n  \n  -- NOUVELLE COLONNE : L'état strict de la pièce sur la station que tu as sélectionnée\n  CASE \n    WHEN Statut_Brut = 'Completed' THEN '🟢 Terminé'\n    WHEN Debut_Reel IS NOT NULL THEN '🟠 En cours'\n    ELSE '⚪ Pas commencé'\n  END AS `État`,\n  \n  -- LA COLONNE RADAR : Déconnectée des couleurs de retard, elle dit juste où est la pièce\n  CASE \n    WHEN Max_Active_OP IS NULL THEN 'Stock Amont'\n    ELSE CONCAT('OP ', Max_Active_OP)\n  END AS `OP Actuelle`,\n  \n  -- L'écart propre (Calculé uniquement sur les temps de la station sélectionnée)\n  CASE \n    WHEN Diff_Sec > 0 THEN CONCAT('+', LPAD(FLOOR(Diff_Sec / 3600), 2, '0'), 'h', LPAD(FLOOR((Diff_Sec % 3600) / 60), 2, '0'))\n    WHEN Diff_Sec <= 0 AND (Statut_Brut = 'Completed' OR Debut_Reel IS NOT NULL) THEN CONCAT('-', LPAD(FLOOR(ABS(Diff_Sec) / 3600), 2, '0'), 'h', LPAD(FLOOR((ABS(Diff_Sec) % 3600) / 60), 2, '0'))\n    ELSE '-'\n  END AS `Écart`\n\nFROM (\n  SELECT \n    p.OrderNum AS OF_Num,\n    p.Takt,\n    STR_TO_DATE(CONCAT(p.Annee, '/', TRIM(p.Heure_Debut)), '%Y/%d/%m %H:%i') AS Debut_Theo,\n    STR_TO_DATE(CONCAT(p.Annee, '/', TRIM(p.Heure_Fin)), '%Y/%d/%m %H:%i') AS Fin_Theo,\n    o.FirstActivityTime AS Debut_Reel,\n    o.LastActivityTime AS Fin_Reel,\n    o.Status AS Statut_Brut,\n    pos.Max_Active_OP, \n    \n    -- Calcul du retard (toujours simulé à 14h00 pour tes tests) sur l'OP ciblée\n    CASE \n      WHEN o.Status = 'Completed' THEN TIMESTAMPDIFF(SECOND, STR_TO_DATE(CONCAT(p.Annee, '/', TRIM(p.Heure_Fin)), '%Y/%d/%m %H:%i'), o.LastActivityTime)\n      WHEN o.FirstActivityTime IS NOT NULL THEN TIMESTAMPDIFF(SECOND, STR_TO_DATE(CONCAT(p.Annee, '/', TRIM(p.Heure_Fin)), '%Y/%d/%m %H:%i'), IFNULL(o.LastActivityTime, STR_TO_DATE('2026-01-27 14:00:00', '%Y-%m-%d %H:%i:%s')))\n      WHEN STR_TO_DATE('2026-01-27 14:00:00', '%Y-%m-%d %H:%i:%s') > STR_TO_DATE(CONCAT(p.Annee, '/', TRIM(p.Heure_Fin)), '%Y/%d/%m %H:%i') \n        THEN TIMESTAMPDIFF(SECOND, STR_TO_DATE(CONCAT(p.Annee, '/', TRIM(p.Heure_Fin)), '%Y/%d/%m %H:%i'), STR_TO_DATE('2026-01-27 14:00:00', '%Y-%m-%d %H:%i:%s'))\n      ELSE 0 \n    END AS Diff_Sec\n\n  FROM planning_global p\n  \n  -- Jointure sur la station cible ($station)\n  LEFT JOIN orderoperation o \n    ON CAST(p.OrderNum AS CHAR) = CAST(o.OrderNum AS CHAR)\n   AND CAST(p.OrderStepSequenceNum AS CHAR) = CAST(o.OrderStepSequenceNum AS CHAR)\n   \n  -- Radar : On cherche bêtement le pointage le plus élevé sur la ligne pour localiser la pièce\n  LEFT JOIN (\n    SELECT \n      OrderNum,\n      MAX(CAST(OrderStepSequenceNum AS UNSIGNED)) AS Max_Active_OP\n    FROM orderoperation\n    WHERE FirstActivityTime IS NOT NULL OR Status = 'Completed'\n    GROUP BY OrderNum\n  ) pos ON CAST(p.OrderNum AS CHAR) = CAST(pos.OrderNum AS CHAR)\n\n  WHERE p.Ligne = 'NLG' \n    AND p.Semaine IN ($semaine)\n    AND p.OrderStepSequenceNum IN ($station)\n    AND p.OrderNum != 'Libre'\n) base\n\nORDER BY CAST(SUBSTRING_INDEX(Takt, ' ', -1) AS UNSIGNED) ASC;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "OF en cours de production & Visibilité Upstream sur un OP choisit",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "dffogrdjtx1q8b"
+      },
+      "description": "Affiche la moyenne des écarts (en heures) pour toutes les pièces prévues sur chaque OP.\n- *En rouge* :  la station est en retard\n- *En vert* : la station est en avance/on time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "h"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 22
+      },
+      "id": 7,
+      "options": {
+        "barRadius": 0.02,
+        "barWidth": 0.98,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "always",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {
+          "dataset": "kpi_db",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  CONCAT('OP ', p.OrderStepSequenceNum) AS Station,\n  \n  -- On calcule la moyenne des écarts en HEURES (avec 2 décimales)\n  ROUND(AVG(\n    CASE \n      -- 1. Pièce terminée : différence entre Fin Théorique et Fin Réelle\n      WHEN o.Status = 'Completed' THEN TIMESTAMPDIFF(SECOND, STR_TO_DATE(CONCAT(p.Annee, '/', TRIM(p.Heure_Fin)), '%Y/%d/%m %H:%i'), o.LastActivityTime)\n      \n      -- 2. Pièce en cours : différence entre Fin Théorique et Maintenant (Simulé 14h00)\n      WHEN o.FirstActivityTime IS NOT NULL THEN TIMESTAMPDIFF(SECOND, STR_TO_DATE(CONCAT(p.Annee, '/', TRIM(p.Heure_Fin)), '%Y/%d/%m %H:%i'), IFNULL(o.LastActivityTime, STR_TO_DATE('2026-01-27 14:00:00', '%Y-%m-%d %H:%i:%s')))\n      \n      -- 3. Pièce en attente mais déjà en retard par rapport au planning : on compte le retard\n      WHEN STR_TO_DATE('2026-01-27 14:00:00', '%Y-%m-%d %H:%i:%s') > STR_TO_DATE(CONCAT(p.Annee, '/', TRIM(p.Heure_Fin)), '%Y/%d/%m %H:%i') \n        THEN TIMESTAMPDIFF(SECOND, STR_TO_DATE(CONCAT(p.Annee, '/', TRIM(p.Heure_Fin)), '%Y/%d/%m %H:%i'), STR_TO_DATE('2026-01-27 14:00:00', '%Y-%m-%d %H:%i:%s'))\n        \n      -- 4. MAGIQUE : Si la pièce n'est pas encore commencée et qu'on a le temps, on l'ignore (NULL) pour ne pas fausser la moyenne !\n      ELSE NULL \n    END\n  ) / 3600, 2) AS `Retard Moyen (Heures)`\n\nFROM planning_global p\nLEFT JOIN orderoperation o \n  ON CAST(p.OrderNum AS CHAR) = CAST(o.OrderNum AS CHAR)\n AND CAST(p.OrderStepSequenceNum AS CHAR) = CAST(o.OrderStepSequenceNum AS CHAR)\n\nWHERE p.Ligne = 'NLG' \n  AND p.Semaine IN ($semaine)\n  AND p.OrderNum != 'Libre'\n\n-- On groupe par Station pour faire les barres du graphique\nGROUP BY p.OrderStepSequenceNum\n\n-- On trie de la première à la dernière station\nORDER BY CAST(p.OrderStepSequenceNum AS UNSIGNED) ASC;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Détecteur de goulots d'étranglement",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "dffogrdjtx1q8b"
+      },
+      "description": "Ce graphique cartographie l'emplacement physique de toutes les pièces non-terminées de la semaine. Les pièces déjà expédiées (Sorties de ligne) sont exclues du calcul.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 22
+      },
+      "id": 8,
+      "options": {
+        "displayLabels": [
+          "percent",
+          "value",
+          "name"
+        ],
+        "legend": {
+          "calcs": [],
+          "displayMode": "hidden",
+          "placement": "right",
+          "showLegend": false,
+          "values": []
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "sort": "desc",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {
+          "dataset": "kpi_db",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  -- On crée les étiquettes du camembert\n  CASE \n    WHEN pos.Max_Active_OP IS NULL THEN 'Flux Amont'\n    ELSE CONCAT('OP ', pos.Max_Active_OP)\n  END AS `Position Actuelle`,\n  \n  -- On compte combien d'OF sont agglutinés à cet endroit\n  COUNT(p_unique.OrderNum) AS `Nombre d'OF`\n\nFROM (\n  -- 1. On liste tous les OF de la semaine\n  SELECT OrderNum \n  FROM planning_global \n  WHERE Ligne = 'NLG' \n    AND Semaine IN ($semaine) \n    AND OrderNum != 'Libre'\n  GROUP BY OrderNum\n) p_unique\n\nLEFT JOIN (\n  -- 2. On cherche la position actuelle de chaque OF (Le Radar propre)\n  SELECT \n    o_sub.OrderNum,\n    MAX(CAST(o_sub.OrderStepSequenceNum AS UNSIGNED)) AS Max_Active_OP\n  FROM orderoperation o_sub\n  JOIN config_station cs \n    ON CAST(o_sub.OrderStepSequenceNum AS CHAR) = CAST(cs.OrderStepSequenceNum AS CHAR)\n   AND cs.Ligne LIKE '%NLG%'\n  WHERE o_sub.FirstActivityTime IS NOT NULL OR o_sub.Status = 'Completed'\n  GROUP BY o_sub.OrderNum\n) pos ON CAST(p_unique.OrderNum AS CHAR) = CAST(pos.OrderNum AS CHAR)\n\n-- 3. FILTRE MAGIQUE : On exclut les pièces sorties de ligne (OP 900)\nWHERE IFNULL(pos.Max_Active_OP, 0) != 900\n\n-- On regroupe par position pour faire les parts du gâteau\nGROUP BY `Position Actuelle`, pos.Max_Active_OP\n\n-- On trie l'affichage pour que le camembert tourne dans le sens de la ligne\nORDER BY \n  CASE \n    WHEN pos.Max_Active_OP IS NULL THEN 0 \n    ELSE pos.Max_Active_OP \n  END ASC;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Météo de la Charge",
+      "type": "piechart"
+    }
+  ],
+  "preload": false,
+  "schemaVersion": 42,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "5",
+          "value": "5"
+        },
+        "definition": "SELECT DISTINCT Semaine FROM planning_nlg ORDER BY Semaine DESC;",
+        "label": "Semaine",
+        "name": "semaine",
+        "options": [],
+        "query": "SELECT DISTINCT Semaine FROM planning_nlg ORDER BY Semaine DESC;",
+        "refresh": 1,
+        "regex": "\n",
+        "type": "query"
+      },
+      {
+        "allowCustomValue": false,
+        "current": {
+          "text": [
+            "600"
+          ],
+          "value": [
+            "600"
+          ]
+        },
+        "definition": "SELECT DISTINCT OrderStepSequenceNum \nFROM config_station \nWHERE Ligne LIKE '%NLG%' \nORDER BY CAST(OrderStepSequenceNum AS UNSIGNED) ASC;",
+        "includeAll": true,
+        "label": "Numéro de l'OP ",
+        "multi": true,
+        "name": "station",
+        "options": [],
+        "query": "SELECT DISTINCT OrderStepSequenceNum \nFROM config_station \nWHERE Ligne LIKE '%NLG%' \nORDER BY CAST(OrderStepSequenceNum AS UNSIGNED) ASC;",
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "2026-01-26T16:12:00.000Z",
+    "to": "2026-01-31T00:30:00.000Z"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "[Ligne NLG] Vue par opération",
+  "uid": "nlg_dashboard",
+  "version": 3
+}
